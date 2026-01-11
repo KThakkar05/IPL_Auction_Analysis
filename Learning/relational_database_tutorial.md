@@ -1,6 +1,7 @@
 # Understanding Relational Databases: IPL Cricket Example
 
 ## 📚 Table of Contents
+
 1. [What is a Relational Database?](#what-is-a-relational-database)
 2. [Key Concepts](#key-concepts)
 3. [Why Use Multiple Tables?](#why-use-multiple-tables)
@@ -15,7 +16,9 @@
 A **relational database** stores data in **tables** that are **related** to each other.
 
 ### Simple Analogy
+
 Think of it like organizing a library:
+
 - One shelf for **books** (title, author, ISBN)
 - One shelf for **authors** (name, birth year, country)
 - One shelf for **borrowers** (name, ID, phone)
@@ -26,6 +29,7 @@ Instead of writing the author's full information on every book, you just write t
 ### Database vs Spreadsheet
 
 **Spreadsheet** (flat data):
+
 ```
 | Match Date | Team 1 | Team 2 | Winner | Player 1 | Player 2 | Player 3 | ... |
 |------------|--------|--------|--------|----------|----------|----------|-----|
@@ -33,12 +37,14 @@ Instead of writing the author's full information on every book, you just write t
 ```
 
 **Problems:**
+
 - Lots of repetition (same player names over and over)
 - Hard to update (if you fix a typo, you must fix it everywhere)
 - Limited columns (what if a team has 15 players?)
 - Can't easily answer "Which teams did Virat Kohli play for?"
 
 **Relational Database** (connected tables):
+
 ```
 MATCHES table:          PLAYERS table:           MATCH_PLAYERS table:
 | match_id | date     | | player_id | name    |  | match_id | player_id |
@@ -59,6 +65,7 @@ MATCHES table:          PLAYERS table:           MATCH_PLAYERS table:
 ## Key Concepts
 
 ### 1. **Primary Key (PK)**
+
 A **unique identifier** for each row in a table.
 
 ```sql
@@ -69,16 +76,19 @@ CREATE TABLE players (
 ```
 
 Examples:
+
 - `player_id` for players table
 - `match_id` for matches table
 - `delivery_id` for deliveries table
 
 **Rules:**
+
 - Must be unique (no duplicates)
 - Cannot be NULL (empty)
 - Usually a number or code
 
 ### 2. **Foreign Key (FK)**
+
 A column that **references** a primary key in another table, creating a relationship.
 
 ```sql
@@ -94,9 +104,11 @@ This says: "Every `batter_id` in deliveries must exist in the players table"
 ### 3. **Relationships**
 
 #### One-to-Many (1:M)
+
 One record in Table A relates to many records in Table B.
 
 Example: **One match** has **many deliveries**
+
 ```
 MATCHES                    DELIVERIES
 match_id=1  ─────────┐    match_id=1, delivery_id=1
@@ -106,11 +118,13 @@ match_id=1  ─────────┐    match_id=1, delivery_id=1
 ```
 
 #### Many-to-Many (M:M)
+
 Many records in Table A relate to many records in Table B.
 
 Example: **Many matches** have **many players**, and **many players** play in **many matches**
 
 This requires a **junction table**:
+
 ```
 MATCHES          MATCH_PLAYERS          PLAYERS
 match_id=1 ────> match_id=1, player_id=p1 <──── player_id=p1
@@ -120,9 +134,11 @@ match_id=2 ────> match_id=2, player_id=p1 <──┘
 ```
 
 ### 4. **Normalization**
+
 The process of organizing data to **reduce redundancy** (repetition) and **improve data integrity**.
 
 **Bad (Denormalized):**
+
 ```
 | match_id | team_name | team_city | team_owner |
 |----------|-----------|-----------|------------|
@@ -132,6 +148,7 @@ The process of organizing data to **reduce redundancy** (repetition) and **impro
 ```
 
 **Good (Normalized):**
+
 ```
 MATCHES table:               TEAMS table:
 | match_id | team_id |       | team_id | name | city    | owner     |
@@ -142,6 +159,7 @@ MATCHES table:               TEAMS table:
 ```
 
 Benefits:
+
 - Update team info in ONE place
 - No wasted space
 - No inconsistencies (e.g., "KKR" vs "Kolkata Knight Riders")
@@ -153,6 +171,7 @@ Benefits:
 Let's analyze your IPL JSON data to see why we need multiple tables.
 
 ### Your JSON Structure:
+
 ```json
 {
   "info": {
@@ -175,7 +194,7 @@ Let's analyze your IPL JSON data to see why we need multiple tables.
             {
               "batter": "Ganguly",
               "bowler": "P Kumar",
-              "runs": {"batter": 0, "total": 1}
+              "runs": { "batter": 0, "total": 1 }
             }
           ]
         }
@@ -219,9 +238,11 @@ Let's analyze your IPL JSON data to see why we need multiple tables.
 ## Designing Your Database
 
 ### Step 1: Identify Entities
+
 **Entities** are the "things" in your data that deserve their own table.
 
 From IPL JSON:
+
 - ✅ **Match** (each game)
 - ✅ **Team** (KKR, MI, CSK, etc.)
 - ✅ **Player** (Ganguly, Kohli, etc.)
@@ -231,9 +252,11 @@ From IPL JSON:
 - ✅ **Wicket** (each dismissal)
 
 ### Step 2: Identify Attributes
+
 **Attributes** are the properties of each entity.
 
 **Match:**
+
 - match_id (PK)
 - date
 - city
@@ -243,10 +266,12 @@ From IPL JSON:
 - season
 
 **Player:**
+
 - player_id (PK)
 - player_name
 
 **Delivery:**
+
 - delivery_id (PK)
 - innings_id (FK)
 - batter_id (FK)
@@ -257,20 +282,24 @@ From IPL JSON:
 ### Step 3: Identify Relationships
 
 1. **Match ↔ Team** (Many-to-Many)
+
    - One match has two teams
    - One team plays in many matches
    - **Junction table**: `match_teams`
 
 2. **Match ↔ Player** (Many-to-Many)
+
    - One match has many players
    - One player plays in many matches
    - **Junction table**: `match_players`
 
 3. **Match → Innings** (One-to-Many)
+
    - One match has 1-2 innings
    - One innings belongs to one match
 
 4. **Innings → Deliveries** (One-to-Many)
+
    - One innings has many deliveries
    - One delivery belongs to one innings
 
@@ -328,6 +357,7 @@ Let me walk you through how the code transforms your JSON into the database.
 ### Example: Processing One Match
 
 **Input JSON:**
+
 ```json
 {
   "info": {
@@ -368,6 +398,7 @@ match_id = cursor.lastrowid  # Get auto-generated ID (e.g., 1)
 ```
 
 **Result in MATCHES table:**
+
 ```
 | match_id | match_date | city      | venue                      |
 |----------|------------|-----------|----------------------------|
@@ -381,14 +412,14 @@ for team_name in info['teams']:  # ["KKR", "RCB"]
     # Check if team exists
     cursor.execute('SELECT team_id FROM teams WHERE team_name = ?', (team_name,))
     result = cursor.fetchone()
-    
+
     if result:
         team_id = result[0]  # Team already exists
     else:
         # Create new team
         cursor.execute('INSERT INTO teams (team_name) VALUES (?)', (team_name,))
         team_id = cursor.lastrowid
-    
+
     # Link match to team
     cursor.execute('''
         INSERT INTO match_teams (match_id, team_id)
@@ -397,6 +428,7 @@ for team_name in info['teams']:  # ["KKR", "RCB"]
 ```
 
 **Result in TEAMS table:**
+
 ```
 | team_id | team_name |
 |---------|-----------|
@@ -405,6 +437,7 @@ for team_name in info['teams']:  # ["KKR", "RCB"]
 ```
 
 **Result in MATCH_TEAMS table:**
+
 ```
 | match_id | team_id |
 |----------|---------|
@@ -427,7 +460,7 @@ for player_name, player_id in registry.items():
 # Link players to match and team
 for team_name, player_names in info['players'].items():
     team_id = get_team_id(team_name)
-    
+
     for player_name in player_names:
         player_id = registry[player_name]
         cursor.execute('''
@@ -437,6 +470,7 @@ for team_name, player_names in info['players'].items():
 ```
 
 **Result in PLAYERS table:**
+
 ```
 | player_id | player_name  |
 |-----------|--------------|
@@ -447,6 +481,7 @@ for team_name, player_names in info['players'].items():
 ```
 
 **Result in MATCH_PLAYERS table:**
+
 ```
 | match_id | player_id | team_id |
 |----------|-----------|---------|
@@ -462,16 +497,17 @@ for team_name, player_names in info['players'].items():
 for innings_num, innings_data in enumerate(data['innings'], 1):
     batting_team = innings_data['team']
     team_id = get_team_id(batting_team)
-    
+
     cursor.execute('''
         INSERT INTO innings (match_id, innings_number, batting_team_id)
         VALUES (?, ?, ?)
     ''', (match_id, innings_num, team_id))
-    
+
     innings_id = cursor.lastrowid
 ```
 
 **Result in INNINGS table:**
+
 ```
 | innings_id | match_id | innings_number | batting_team_id |
 |------------|----------|----------------|-----------------|
@@ -484,27 +520,28 @@ for innings_num, innings_data in enumerate(data['innings'], 1):
 ```python
 for over_data in innings_data['overs']:
     over_num = over_data['over']
-    
+
     for ball_num, delivery in enumerate(over_data['deliveries'], 1):
         batter = delivery['batter']
         bowler = delivery['bowler']
         runs = delivery['runs']
-        
+
         batter_id = registry[batter]
         bowler_id = registry[bowler]
-        
+
         cursor.execute('''
             INSERT INTO deliveries (
                 innings_id, over_number, ball_number,
                 batter_id, bowler_id, runs_batter, runs_total
             ) VALUES (?, ?, ?, ?, ?, ?, ?)
-        ''', (innings_id, over_num, ball_num, 
+        ''', (innings_id, over_num, ball_num,
               batter_id, bowler_id, runs['batter'], runs['total']))
-        
+
         delivery_id = cursor.lastrowid
 ```
 
 **Result in DELIVERIES table:**
+
 ```
 | delivery_id | innings_id | over | ball | batter_id | bowler_id | runs_batter | runs_total |
 |-------------|------------|------|------|-----------|-----------|-------------|------------|
@@ -521,14 +558,14 @@ if 'wickets' in delivery:
         player_out = wicket['player_out']
         player_out_id = registry[player_out]
         kind = wicket['kind']
-        
+
         cursor.execute('''
             INSERT INTO wickets (delivery_id, player_out_id, kind)
             VALUES (?, ?, ?)
         ''', (delivery_id, player_out_id, kind))
-        
+
         wicket_id = cursor.lastrowid
-        
+
         # Process fielders
         for fielder in wicket.get('fielders', []):
             fielder_id = registry[fielder['name']]
@@ -539,6 +576,7 @@ if 'wickets' in delivery:
 ```
 
 **Result in WICKETS table:**
+
 ```
 | wicket_id | delivery_id | player_out_id | kind   |
 |-----------|-------------|---------------|--------|
@@ -546,6 +584,7 @@ if 'wickets' in delivery:
 ```
 
 **Result in WICKET_FIELDERS table:**
+
 ```
 | wicket_id | player_id |
 |-----------|-----------|
@@ -559,12 +598,14 @@ if 'wickets' in delivery:
 ### Exercise 1: Design a Simple Database
 
 Design a database for a **school**:
+
 - Students (name, ID, grade)
 - Teachers (name, ID, subject)
 - Classes (subject, time)
 - Enrollments (which students in which classes)
 
 **Questions:**
+
 1. Which tables do you need?
 2. What are the primary keys?
 3. What relationships exist?
@@ -574,6 +615,7 @@ Design a database for a **school**:
 <summary>Click for Solution</summary>
 
 **Tables:**
+
 ```sql
 CREATE TABLE students (
     student_id INTEGER PRIMARY KEY,
@@ -605,6 +647,7 @@ CREATE TABLE enrollments (
 ```
 
 **Relationships:**
+
 - Teacher → Classes (1:M) - one teacher teaches many classes
 - Class ↔ Students (M:M) - through enrollments junction table
 </details>
@@ -612,6 +655,7 @@ CREATE TABLE enrollments (
 ### Exercise 2: Normalize Bad Data
 
 This table has redundancy:
+
 ```
 | order_id | customer_name | customer_email   | product    | price |
 |----------|---------------|------------------|------------|-------|
@@ -651,6 +695,7 @@ CREATE TABLE orders (
 ```
 
 **Data:**
+
 ```
 CUSTOMERS:
 | customer_id | name       | email            |
@@ -672,6 +717,7 @@ ORDERS:
 | 2        | 1           | 2          |
 | 3        | 2           | 3          |
 ```
+
 </details>
 
 ### Exercise 3: Write Queries
@@ -714,6 +760,7 @@ FROM matches
 WHERE venue = 'M Chinnaswamy Stadium'
 ORDER BY match_date;
 ```
+
 </details>
 
 ---
@@ -721,6 +768,7 @@ ORDER BY match_date;
 ## Summary: Why Relational Databases?
 
 ### ✅ Benefits
+
 1. **No Redundancy** - Each piece of data stored once
 2. **Data Integrity** - Foreign keys prevent orphan records
 3. **Flexibility** - Easy to add new relationships
@@ -729,11 +777,13 @@ ORDER BY match_date;
 6. **Easy Updates** - Change data in one place
 
 ### ⚖️ Trade-offs
+
 1. **Complexity** - Need to understand JOINs
 2. **Setup Time** - More initial design work
 3. **Query Performance** - JOINs can be slow on huge datasets
 
 ### 🎯 When to Use
+
 - Data has relationships (customers → orders → products)
 - Need to avoid duplication
 - Data will be updated frequently
@@ -741,6 +791,7 @@ ORDER BY match_date;
 - Need transaction safety (banking, e-commerce)
 
 ### 🚫 When NOT to Use
+
 - Very simple data (just a list)
 - No relationships
 - Read-only data that never changes
@@ -759,6 +810,7 @@ ORDER BY match_date;
 7. ✅ Explore database visualization tools
 
 **Recommended Tools:**
+
 - **DB Browser for SQLite** - Visual database browser
 - **DBeaver** - Universal database tool
 - **SQLite Online** - Practice in your browser

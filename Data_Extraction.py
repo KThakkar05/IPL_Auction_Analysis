@@ -1,8 +1,14 @@
 import pandas as pd
 import os
 import sys
+import json
 
-os.chdir('/Users/kunj/Documents/Python_Projects/IPL_Auction_Analysis')
-os.getcwd()
+f = open('./Data/335982.json', 'r', encoding='utf-8')
+data = json.load(f)
+info = data['innings']
+print(info)
+match_date = info['dates'][0]
+print(match_date)
+data.get('meta',{})
+print(data['meta'])
 
-df = pd.read_json('./Data/ball/335982.json')
